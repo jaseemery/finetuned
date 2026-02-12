@@ -40,6 +40,16 @@ class DataFormatter:
             "user": "<|im_start|>user\n{content}<|im_end|>\n",
             "assistant": "<|im_start|>assistant\n{content}<|im_end|>\n",
         },
+        "qwen": {
+            "system": "<|im_start|>system\n{system}<|im_end|>\n",
+            "user": "<|im_start|>user\n{content}<|im_end|>\n",
+            "assistant": "<|im_start|>assistant\n{content}<|im_end|>\n",
+        },
+        "gpt": {
+            "system": "",
+            "user": "",
+            "assistant": "",
+        },
         "alpaca": {
             "template": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\n{instruction}\n\n### Response:\n{response}",
         },
@@ -120,6 +130,28 @@ class DataFormatter:
             "source_id": qa.source_id,
         }
 
+    def format_for_gpt(self, qa: QAPair) -> dict:
+        """Format for OpenAI GPT fine-tuning API."""
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": qa.instruction},
+            {"role": "assistant", "content": qa.response},
+        ]
+        return {"messages": messages}
+
+    def format_for_qwen(self, qa: QAPair) -> dict:
+        """Format for Qwen models (ChatML-based messages format)."""
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": qa.instruction},
+            {"role": "assistant", "content": qa.response},
+        ]
+        return {
+            "messages": messages,
+            "source_id": qa.source_id,
+            "category": qa.category,
+        }
+
     def format_for_axolotl(self, qa: QAPair) -> dict:
         """Format for Axolotl sharegpt format."""
         return {
@@ -143,7 +175,7 @@ class DataFormatter:
             qa_pairs: List of Q&A pairs to format
             output_dir: Directory to save formatted data
             formats: List of formats to generate. Options:
-                     'trl', 'torchtune', 'axolotl', 'raw', 'alpaca'
+                     'trl', 'torchtune', 'axolotl', 'gpt', 'qwen', 'raw', 'alpaca'
 
         Returns:
             Dict with paths to generated files
@@ -174,6 +206,12 @@ class DataFormatter:
             elif fmt == "axolotl":
                 train_data = [self.format_for_axolotl(qa) for qa in train_pairs]
                 val_data = [self.format_for_axolotl(qa) for qa in val_pairs]
+            elif fmt == "gpt":
+                train_data = [self.format_for_gpt(qa) for qa in train_pairs]
+                val_data = [self.format_for_gpt(qa) for qa in val_pairs]
+            elif fmt == "qwen":
+                train_data = [self.format_for_qwen(qa) for qa in train_pairs]
+                val_data = [self.format_for_qwen(qa) for qa in val_pairs]
             elif fmt == "raw":
                 train_data = [qa.to_dict() for qa in train_pairs]
                 val_data = [qa.to_dict() for qa in val_pairs]
