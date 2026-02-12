@@ -1,0 +1,27 @@
+# Data Collection Pipeline Dependencies
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# GitHub API
+PyGithub>=2.1.0
+
+# Data Processing
+pandas>=2.1.0
+datasets>=2.16.0
+
+# Rate limiting and caching
+aiolimiter>=1.1.0
+diskcache>=5.6.0
+
+# Progress bars
+tqdm>=4.66.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Optional: For generating synthetic Q&A pairs with an LLM
+openai>=1.0.0
+anthropic>=0.18.0
