@@ -1,13 +1,16 @@
-"""Test the fine-tuned Temporal LLM."""
+"""Test a fine-tuned model."""
+
+import argparse
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
+
 def load_model(base_model_id: str, adapter_path: str):
     """Load the fine-tuned model."""
     print(f"Loading base model: {base_model_id}")
-    tokenizer = AutoTokenizer.from_pretrained(base_model_id)
+    tokenizer = AutoTokenizer.from_pretrained(adapter_path)
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model_id,
@@ -21,12 +24,18 @@ def load_model(base_model_id: str, adapter_path: str):
     return model, tokenizer
 
 
-def generate_response(model, tokenizer, question: str, max_new_tokens: int = 512):
+def generate_response(
+    model,
+    tokenizer,
+    question: str,
+    system_prompt: str = None,
+    max_new_tokens: int = 512,
+):
     """Generate a response to a question."""
-    messages = [
-        {"role": "system", "content": "You are an expert on Temporal.io, a workflow orchestration platform."},
-        {"role": "user", "content": question},
-    ]
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": question})
 
     text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(text, return_tensors="pt").to(model.device)
@@ -46,29 +55,53 @@ def generate_response(model, tokenizer, question: str, max_new_tokens: int = 512
 
 
 def main():
-    base_model = "Qwen/Qwen2.5-1.5B-Instruct"
-    adapter_path = "./temporal-llm"
+    parser = argparse.ArgumentParser(description="Test a fine-tuned model")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="Qwen/Qwen3-1.7B",
+        help="Base model ID",
+    )
+    parser.add_argument(
+        "--adapter",
+        type=str,
+        default="./finetuned-model",
+        help="Path to the fine-tuned adapter",
+    )
+    parser.add_argument(
+        "--system-prompt",
+        type=str,
+        default=None,
+        help="Optional system prompt",
+    )
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=512,
+        help="Max new tokens to generate",
+    )
 
-    model, tokenizer = load_model(base_model, adapter_path)
+    args = parser.parse_args()
 
-    # Test questions about Temporal
-    questions = [
-        "What is a Temporal Workflow?",
-        "How do Activities differ from Workflows in Temporal?",
-        "What is a Task Queue in Temporal?",
-        "Why must Temporal Workflows be deterministic?",
-    ]
+    model, tokenizer = load_model(args.model, args.adapter)
 
     print("\n" + "=" * 60)
-    print("TESTING FINE-TUNED TEMPORAL LLM")
+    print("INTERACTIVE MODEL TEST (type 'quit' to exit)")
     print("=" * 60)
 
-    for question in questions:
-        print(f"\nQuestion: {question}")
-        print("-" * 40)
-        response = generate_response(model, tokenizer, question)
-        print(f"Answer: {response}")
-        print()
+    while True:
+        question = input("\nYou: ").strip()
+        if question.lower() in ("quit", "exit", "q"):
+            break
+        if not question:
+            continue
+
+        response = generate_response(
+            model, tokenizer, question,
+            system_prompt=args.system_prompt,
+            max_new_tokens=args.max_tokens,
+        )
+        print(f"\nModel: {response}")
 
 
 if __name__ == "__main__":

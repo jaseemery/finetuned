@@ -77,7 +77,7 @@ class TemporalDataPipeline:
         logger.info(f"Collected {len(documents)} code files")
         return documents
 
-    def generate_qa_pairs(
+    async def generate_qa_pairs(
         self,
         documents: list[CollectedDocument],
         use_llm: bool = False,
@@ -88,7 +88,7 @@ class TemporalDataPipeline:
         logger.info("=" * 50)
 
         generator = QAGenerator(use_llm=use_llm)
-        qa_pairs = generator.process_documents(
+        qa_pairs = await generator.process_documents(
             documents, self.config.processed_dir / "qa_pairs.jsonl"
         )
 
@@ -168,7 +168,7 @@ class TemporalDataPipeline:
         logger.info(f"\nTotal documents collected: {len(all_documents)}")
 
         # Step 3: Generate Q&A pairs
-        qa_pairs = self.generate_qa_pairs(all_documents, use_llm=use_llm)
+        qa_pairs = await self.generate_qa_pairs(all_documents, use_llm=use_llm)
 
         # Step 4: Format for training
         output_paths = self.format_for_training(qa_pairs, formats=formats, template=template)

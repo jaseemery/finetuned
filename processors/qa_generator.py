@@ -301,14 +301,13 @@ JSON Output:"""
         # Fallback to rule-based
         return self.generate_rule_based(doc)
 
-    def generate(self, doc: CollectedDocument) -> list[QAPair]:
+    async def generate(self, doc: CollectedDocument) -> list[QAPair]:
         """Generate Q&A pairs from a document."""
         if self.use_llm:
-            import asyncio
-            return asyncio.run(self.generate_with_llm(doc))
+            return await self.generate_with_llm(doc)
         return self.generate_rule_based(doc)
 
-    def process_documents(
+    async def process_documents(
         self, documents: list[CollectedDocument], output_path: Path
     ) -> list[QAPair]:
         """Process all documents and generate Q&A pairs."""
@@ -316,7 +315,7 @@ JSON Output:"""
         seen_questions = set()
 
         for doc in documents:
-            qa_pairs = self.generate(doc)
+            qa_pairs = await self.generate(doc)
 
             for qa in qa_pairs:
                 # Deduplicate by question
