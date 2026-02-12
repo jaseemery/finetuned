@@ -22,6 +22,15 @@ tqdm>=4.66.0
 # Environment variables
 python-dotenv>=1.0.0
 
+# Training
+torch>=2.1.0
+transformers>=4.40.0
+peft>=0.10.0
+trl>=0.8.0
+bitsandbytes>=0.43.0
+accelerate>=0.28.0
+tensorboard>=2.16.0
+
 # Optional: For generating synthetic Q&A pairs with an LLM
 openai>=1.0.0
 anthropic>=0.18.0
